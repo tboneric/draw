@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>值班/抽奖小工具</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f7fa;
+            --text-color: #333;
+            --highlight-color: #ff6b6b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        h2 {
+            color: var(--text-color);
+            margin-bottom: 1.5rem;
+        }
+
+        /* 显示区域 */
+        .display-area {
+            background-color: var(--secondary-color);
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            border: 2px solid #e1e4e8;
+            overflow: hidden;
+        }
+
+        #result-name {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            transition: transform 0.1s;
+        }
+
+        /* 控制按钮 */
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        button {
+            padding: 10px 25px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        #start-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        #start-btn:hover {
+            background-color: #357abd;
+        }
+
+        #start-btn.running {
+            background-color: var(--highlight-color);
+        }
+
+        #reset-btn {
+            background-color: #e0e0e0;
+            color: #555;
+        }
+
+        #reset-btn:hover {
+            background-color: #d0d0d0;
+        }
+
+        /* 设置区域 */
+        .settings {
+            text-align: left;
+            border-top: 1px solid #eee;
+            padding-top: 1rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 80px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .options {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .options input {
+            margin-right: 8px;
+        }
+
+        .status-text {
+            margin-top: 5px;
+            font-size: 0.85rem;
+            color: #888;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🎉 值班/抽奖助手</h2>
+    
+    <div class="display-area">
+        <div id="result-name">准备就绪</div>
+    </div>
+
+    <div class="controls">
+        <button id="start-btn" onclick="toggleDraw()">开始抽奖</button>
+        <button id="reset-btn" onclick="resetList()">重置名单</button>
+    </div>
+
+    <div class="settings">
+        <label for="names-input" style="font-weight: bold; display: block; margin-bottom: 5px;">名单设置 (用回车换行分隔):</label>
+        <textarea id="names-input" placeholder="张三&#10;李四&#10;王五&#10;赵六" oninput="updateList()">张三
+李四
+王五
+赵六
+钱七
+孙八</textarea>
+        
+        <div class="options">
+            <input type="checkbox" id="remove-after-draw">
+            <label for="remove-after-draw">抽中后从名单移除 (适合排班)</label>
+        </div>
+        <div class="status-text" id="count-display">当前名单: 6 人</div>
+    </div>
+</div>
+
+<script>
+    let names = []; // 存储当前的名单
+    let timer = null; // 定时器
+    let isRunning = false; // 状态标记
+
+    // 初始化
+    window.onload = function() {
+        updateList();
+    };
+
+    // 更新名单数据
+    function updateList() {
+        const input = document.getElementById('names-input').value;
+        // 过滤掉空行
+        names = input.split('\n').map(name => name.trim()).filter(name => name !== '');
+        document.getElementById('count-display').innerText = `当前名单: ${names.length} 人`;
+    }
+
+    // 重置名单到默认值（或者你可以清空）
+    function resetList() {
+        const defaultNames = "张三\n李四\n王五\n赵六\n钱七\n孙八";
+        document.getElementById('names-input').value = defaultNames;
+        document.getElementById('result-name').innerText = "准备就绪";
+        document.getElementById('result-name').style.color = "var(--primary-color)";
+        updateList();
+    }
+
+    // 开始/停止 抽奖逻辑
+    function toggleDraw() {
+        const btn = document.getElementById('start-btn');
+        const display = document.getElementById('result-name');
+        
+        if (names.length === 0) {
+            alert('名单为空，请先在下方输入名字！');
+            return;
+        }
+
+        if (!isRunning) {
+            // === 开始滚动 ===
+            isRunning = true;
+            btn.innerText = '停止';
+            btn.classList.add('running');
+            display.style.color = "var(--text-color)"; // 滚动时颜色
+
+            timer = setInterval(() => {
+                const randomIndex = Math.floor(Math.random() * names.length);
+                display.innerText = names[randomIndex];
+            }, 50); // 50毫秒切换一次名字
+        } else {
+            // === 停止并选中 ===
+            clearInterval(timer);
+            isRunning = false;
+            btn.innerText = '开始抽奖';
+            btn.classList.remove('running');
+            
+            // 最终确定一个名字
+            const finalIndex = Math.floor(Math.random() * names.length);
+            const winner = names[finalIndex];
+            
+            display.innerText = winner;
+            display.style.color = "var(--highlight-color)"; // 选中时高亮
+            display.style.transform = "scale(1.2)";
+            setTimeout(() => display.style.transform = "scale(1)", 200);
+
+            // 如果勾选了“抽中后移除”
+            const shouldRemove = document.getElementById('remove-after-draw').checked;
+            if (shouldRemove) {
+                removeName(winner);
+            }
+        }
+    }
+
+    // 从名单中移除名字
+    function removeName(nameToRemove) {
+        // 更新数组
+        names = names.filter(name => name !== nameToRemove);
+        
+        // 更新输入框显示
+        const inputArea = document.getElementById('names-input');
+        inputArea.value = names.join('\n');
+        
+        // 更新计数
+        document.getElementById('count-display').innerText = `剩余名单: ${names.length} 人`;
+
+        if (names.length === 0) {
+            setTimeout(() => alert("名单已全部抽完！"), 500);
+        }
+    }
+</script>
+
+</body>
+</html>
