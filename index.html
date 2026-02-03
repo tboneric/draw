@@ -3,256 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>值班/抽奖小工具</title>
+    <title>值班排班生成器</title>
     <style>
         :root {
             --primary-color: #4a90e2;
-            --secondary-color: #f5f7fa;
-            --text-color: #333;
-            --highlight-color: #ff6b6b;
+            --bg-color: #f5f7fa;
+            --container-bg: #ffffff;
+            --border-color: #e1e4e8;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
             margin: 0;
-            background-color: #f0f2f5;
+            padding: 20px;
+            color: #333;
         }
 
         .container {
-            background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            width: 90%;
-            max-width: 450px;
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--container-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        h1 {
             text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
         }
 
-        h2 {
-            color: var(--text-color);
-            margin-bottom: 1.5rem;
+        .input-group {
+            margin-bottom: 20px;
         }
 
-        /* 显示区域 */
-        .display-area {
-            background-color: var(--secondary-color);
-            height: 120px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 10px;
-            margin-bottom: 1.5rem;
-            border: 2px solid #e1e4e8;
-            overflow: hidden;
-        }
-
-        #result-name {
-            font-size: 3rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            transition: transform 0.1s;
-        }
-
-        /* 控制按钮 */
-        .controls {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 1.5rem;
-        }
-
-        button {
-            padding: 10px 25px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.2s;
+        label {
+            display: block;
+            margin-bottom: 8px;
             font-weight: 600;
         }
 
-        #start-btn {
-            background-color: var(--primary-color);
-            color: white;
+        .date-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
         }
 
-        #start-btn:hover {
-            background-color: #357abd;
+        .date-col {
+            flex: 1;
+            min-width: 200px;
         }
 
-        #start-btn.running {
-            background-color: var(--highlight-color);
-        }
-
-        #reset-btn {
-            background-color: #e0e0e0;
-            color: #555;
-        }
-
-        #reset-btn:hover {
-            background-color: #d0d0d0;
-        }
-
-        /* 设置区域 */
-        .settings {
-            text-align: left;
-            border-top: 1px solid #eee;
-            padding-top: 1rem;
+        input[type="date"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
         }
 
         textarea {
-            width: 100%;
-            height: 80px;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
             resize: vertical;
-            margin-bottom: 10px;
-            box-sizing: border-box;
-            font-family: inherit;
+            min-height: 120px;
         }
 
         .options {
+            margin: 15px 0;
             display: flex;
             align-items: center;
-            font-size: 0.9rem;
-            color: #666;
+            gap: 10px;
         }
 
-        .options input {
-            margin-right: 8px;
+        .btn-row {
+            text-align: center;
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
         }
 
-        .status-text {
-            margin-top: 5px;
-            font-size: 0.85rem;
-            color: #888;
-            text-align: right;
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-generate {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-generate:hover {
+            background-color: #357abd;
+        }
+
+        .btn-copy {
+            background-color: #2ecc71;
+            color: white;
+            display: none;
+        }
+        .btn-copy:hover {
+            background-color: #27ae60;
+        }
+
+        .result-area {
+            margin-top: 30px;
+            border-top: 2px solid var(--bg-color);
+            padding-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .weekend {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .error-msg {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🎉 值班/抽奖助手</h2>
-    
-    <div class="display-area">
-        <div id="result-name">准备就绪</div>
-    </div>
+    <h1>📅 值班排班生成器</h1>
 
-    <div class="controls">
-        <button id="start-btn" onclick="toggleDraw()">开始抽奖</button>
-        <button id="reset-btn" onclick="resetList()">重置名单</button>
-    </div>
-
-    <div class="settings">
-        <label for="names-input" style="font-weight: bold; display: block; margin-bottom: 5px;">名单设置 (用回车换行分隔):</label>
-        <textarea id="names-input" placeholder="张三&#10;李四&#10;王五&#10;赵六" oninput="updateList()">张三
-李四
-王五
-赵六
-钱七
-孙八</textarea>
-        
-        <div class="options">
-            <input type="checkbox" id="remove-after-draw">
-            <label for="remove-after-draw">抽中后从名单移除 (适合排班)</label>
+    <!-- 日期选择区域 -->
+    <div class="input-group date-row">
+        <div class="date-col">
+            <label for="startDate">开始日期：</label>
+            <input type="date" id="startDate">
         </div>
-        <div class="status-text" id="count-display">当前名单: 6 人</div>
+        <div class="date-col">
+            <label for="endDate">结束日期：</label>
+            <input type="date" id="endDate">
+        </div>
+    </div>
+
+    <!-- 人员名单区域 -->
+    <div class="input-group">
+        <label for="nameList">人员名单（支持换行、逗号或分号分隔）：</label>
+        <textarea id="nameList" placeholder="例如：
+张三
+李四; 王五
+赵六，钱七"></textarea>
+    </div>
+
+    <!-- 选项 -->
+    <div class="options">
+        <input type="checkbox" id="skipWeekend" checked>
+        <label for="skipWeekend" style="margin-bottom: 0; cursor: pointer;">跳过周六和周日</label>
+    </div>
+
+    <!-- 按钮 -->
+    <div class="btn-row">
+        <button class="btn-generate" onclick="generateRoster()">🎲 生成排班表</button>
+        <button class="btn-copy" id="copyBtn" onclick="copyToClipboard()">📋 复制结果</button>
+    </div>
+    
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- 结果展示 -->
+    <div class="result-area" id="resultArea" style="display: none;">
+        <h3>排班结果：</h3>
+        <table id="resultTable">
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>星期</th>
+                    <th>值班人员</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- JS生成内容 -->
+            </tbody>
+        </table>
     </div>
 </div>
 
 <script>
-    let names = []; // 存储当前的名单
-    let timer = null; // 定时器
-    let isRunning = false; // 状态标记
+    // 专门用于设置input value的格式化函数 (YYYY-MM-DD)
+    function formatDateForInput(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
 
-    // 初始化
+    // 初始化和事件监听
     window.onload = function() {
-        updateList();
-    };
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
 
-    // 更新名单数据
-    function updateList() {
-        const input = document.getElementById('names-input').value;
-        // 过滤掉空行
-        names = input.split('\n').map(name => name.trim()).filter(name => name !== '');
-        document.getElementById('count-display').innerText = `当前名单: ${names.length} 人`;
+        // 1. 设置默认值：开始=今天，结束=明天
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+
+        startDateInput.value = formatDateForInput(today);
+        endDateInput.value = formatDateForInput(tomorrow);
+
+        // 2. 监听开始日期变化，自动设置结束日期为 Start + 1
+        startDateInput.addEventListener('change', function() {
+            if (this.value) {
+                const selectedDate = new Date(this.value);
+                const nextDay = new Date(selectedDate);
+                nextDay.setDate(selectedDate.getDate() + 1);
+                
+                endDateInput.value = formatDateForInput(nextDay);
+            }
+        });
     }
 
-    // 重置名单到默认值（或者你可以清空）
-    function resetList() {
-        const defaultNames = "张三\n李四\n王五\n赵六\n钱七\n孙八";
-        document.getElementById('names-input').value = defaultNames;
-        document.getElementById('result-name').innerText = "准备就绪";
-        document.getElementById('result-name').style.color = "var(--primary-color)";
-        updateList();
+    // 洗牌算法
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
     }
 
-    // 开始/停止 抽奖逻辑
-    function toggleDraw() {
-        const btn = document.getElementById('start-btn');
-        const display = document.getElementById('result-name');
+    // 获取星期几中文
+    function getWeekDayCN(date) {
+        const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        return days[date.getDay()];
+    }
+
+    function generateRoster() {
+        const startDateVal = document.getElementById('startDate').value;
+        const endDateVal = document.getElementById('endDate').value;
+        const rawNames = document.getElementById('nameList').value;
+        const skipWeekend = document.getElementById('skipWeekend').checked;
+        const errorMsg = document.getElementById('errorMsg');
+        const resultArea = document.getElementById('resultArea');
+        const tbody = document.querySelector('#resultTable tbody');
+        const copyBtn = document.getElementById('copyBtn');
+
+        errorMsg.style.display = 'none';
         
-        if (names.length === 0) {
-            alert('名单为空，请先在下方输入名字！');
+        if (!startDateVal || !endDateVal) {
+            showError("请选择完整的日期区间！");
             return;
         }
 
-        if (!isRunning) {
-            // === 开始滚动 ===
-            isRunning = true;
-            btn.innerText = '停止';
-            btn.classList.add('running');
-            display.style.color = "var(--text-color)"; // 滚动时颜色
+        const start = new Date(startDateVal);
+        const end = new Date(endDateVal);
 
-            timer = setInterval(() => {
-                const randomIndex = Math.floor(Math.random() * names.length);
-                display.innerText = names[randomIndex];
-            }, 50); // 50毫秒切换一次名字
-        } else {
-            // === 停止并选中 ===
-            clearInterval(timer);
-            isRunning = false;
-            btn.innerText = '开始抽奖';
-            btn.classList.remove('running');
-            
-            // 最终确定一个名字
-            const finalIndex = Math.floor(Math.random() * names.length);
-            const winner = names[finalIndex];
-            
-            display.innerText = winner;
-            display.style.color = "var(--highlight-color)"; // 选中时高亮
-            display.style.transform = "scale(1.2)";
-            setTimeout(() => display.style.transform = "scale(1)", 200);
-
-            // 如果勾选了“抽中后移除”
-            const shouldRemove = document.getElementById('remove-after-draw').checked;
-            if (shouldRemove) {
-                removeName(winner);
-            }
+        if (start > end) {
+            showError("开始日期不能晚于结束日期！");
+            return;
         }
-    }
 
-    // 从名单中移除名字
-    function removeName(nameToRemove) {
-        // 更新数组
-        names = names.filter(name => name !== nameToRemove);
-        
-        // 更新输入框显示
-        const inputArea = document.getElementById('names-input');
-        inputArea.value = names.join('\n');
-        
-        // 更新计数
-        document.getElementById('count-display').innerText = `剩余名单: ${names.length} 人`;
+        // 处理名单：支持换行、中英文逗号、中英文分号
+        let names = rawNames.split(/[\n,，;；]/)
+                            .map(n => n.trim())
+                            .filter(n => n.length > 0);
 
         if (names.length === 0) {
-            setTimeout(() => alert("名单已全部抽完！"), 500);
+            showError("请输入人员名单！");
+            return;
         }
+
+        let shuffledNames = shuffleArray([...names]); 
+        let currentDate = new Date(start);
+        let roster = [];
+        let nameIndex = 0;
+
+        tbody.innerHTML = ''; 
+
+        // 防止死循环（比如选了很久的区间但全是周末且选择了跳过周末）
+        let maxIterations = 3650; // 最多生成10年
+        let loopCount = 0;
+
+        while (currentDate <= end) {
+            if (loopCount++ > maxIterations) break;
+
+            const dayOfWeek = currentDate.getDay(); 
+            let isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+
+            if (skipWeekend && isWeekend) {
+                // 跳过周末，不排班
+            } else {
+                let person = shuffledNames[nameIndex % shuffledNames.length];
+                
+                roster.push({
+                    date: formatDateForInput(currentDate), // 复用上面的格式化函数
+                    week: getWeekDayCN(currentDate),
+                    person: person,
+                    isWeekend: isWeekend
+                });
+
+                nameIndex++;
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        if (roster.length === 0) {
+            showError("选定的区间内没有需要值班的日子（可能是全是周末）！");
+            return;
+        }
+
+        roster.forEach(item => {
+            const tr = document.createElement('tr');
+            const weekClass = (item.isWeekend) ? 'weekend' : '';
+
+            tr.innerHTML = `
+                <td>${item.date}</td>
+                <td class="${weekClass}">${item.week}</td>
+                <td><strong>${item.person}</strong></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        resultArea.style.display = 'block';
+        copyBtn.style.display = 'block';
+    }
+
+    function showError(msg) {
+        const errorEl = document.getElementById('errorMsg');
+        errorEl.innerText = msg;
+        errorEl.style.display = 'block';
+        document.getElementById('resultArea').style.display = 'none';
+        document.getElementById('copyBtn').style.display = 'none';
+    }
+
+    function copyToClipboard() {
+        const table = document.getElementById('resultTable');
+        const range = document.createRange();
+        range.selectNode(table);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        
+        try {
+            document.execCommand('copy');
+            alert('结果已复制到剪贴板！');
+        } catch (err) {
+            alert('复制失败，请手动复制。');
+        }
+        selection.removeAllRanges();
     }
 </script>
 
